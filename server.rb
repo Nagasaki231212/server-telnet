@@ -57,13 +57,18 @@ servidor = TCPServer.new(puerto)
 puts "Servidor de Telnet iniciado en el puerto #{puerto}. Esperando conexiones..."
 
 loop do
-  cliente = servidor.accept
-  cliente.puts "Bienvenido al servidor Telnet de Nagasaki. Escribe un comando:"
+  cliente_en_puerta = servidor.accept
 
-  while (linea = cliente.gets)
-    comando = linea.chomp.strip.downcase
-    break if procesar_comando(comando, cliente)
+  Thread.new(cliente_en_puerta) do |cliente_privado|
+    cliente_privado.puts "Bienvenido al servidor Telnet de Nagasaki."
+    cliente_privado.puts "Escribe un comando ('time', 'weather', 'get [archivo]', 'quit'):"
+
+    while (linea = cliente_privado.gets)
+      comando = linea.chomp.strip.downcase
+
+      break if procesar_comando(comando, cliente_privado)
+    end
+
+    cliente_privado.close
   end
-
-  cliente.close
 end
